@@ -29,7 +29,7 @@ export default function LoveGame() {
 
     const interval = setInterval(() => {
       setHearts((current) => {
-        if (current.length > 5) return current; // Pas trop de cœurs en même temps
+        if (current.length > 6) return current; // Pas trop de cœurs en même temps
         return [
           ...current,
           {
@@ -40,7 +40,7 @@ export default function LoveGame() {
           },
         ];
       });
-    }, 600); // Un cœur toutes les 600ms
+    }, 550); // Un cœur toutes les 550ms
 
     return () => clearInterval(interval);
   }, [gameState]);
@@ -49,13 +49,13 @@ export default function LoveGame() {
   const handleHeartClick = (id: number, e: React.MouseEvent) => {
     // Petit effet de confetti local sur le clic
     confetti({
-      particleCount: 15,
-      spread: 50,
+      particleCount: 20,
+      spread: 60,
       origin: {
         x: e.clientX / window.innerWidth,
         y: e.clientY / window.innerHeight,
       },
-      colors: ["#ff69b4", "#ff0000"],
+      colors: ["#ef4444", "#b91c1c", "#ffffff"], // Rouge vif, Rouge foncé, Blanc
       disableForReducedMotion: true,
     });
 
@@ -73,23 +73,23 @@ export default function LoveGame() {
   const handleWin = () => {
     setGameState("WON");
     // Grande explosion finale
-    const duration = 3000;
+    const duration = 4000;
     const end = Date.now() + duration;
 
     (function frame() {
       confetti({
-        particleCount: 5,
+        particleCount: 6,
         angle: 60,
-        spread: 55,
+        spread: 70,
         origin: { x: 0 },
-        colors: ["#ff0000", "#ffa500", "#ffff00"],
+        colors: ["#ff0000", "#dc2626", "#fb7185"], // Palette rouge/rose
       });
       confetti({
-        particleCount: 5,
+        particleCount: 6,
         angle: 120,
-        spread: 55,
+        spread: 70,
         origin: { x: 1 },
-        colors: ["#ff0000", "#ff00ff", "#00ffff"],
+        colors: ["#ff0000", "#991b1b", "#fff"],
       });
 
       if (Date.now() < end) {
@@ -99,33 +99,38 @@ export default function LoveGame() {
   };
 
   return (
-    <main className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col items-center justify-center font-sans text-white">
-      {/* Fond animé doux */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-        <div className="absolute top-20 right-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+    // Fond dynamique Rouge/Bordeaux Profond
+    <main className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-red-950 via-rose-900 to-slate-900 flex flex-col items-center justify-center font-sans text-white">
+      {/* Animation de fond (Lumières flottantes rouges et dorées) */}
+      <div className="absolute inset-0 opacity-40">
+        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-red-600 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
+        <div className="absolute top-40 right-10 w-[400px] h-[400px] bg-rose-500 rounded-full mix-blend-screen filter blur-[80px] animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-20 left-1/3 w-[600px] h-[600px] bg-orange-700/50 rounded-full mix-blend-screen filter blur-[120px] animate-blob animation-delay-4000"></div>
       </div>
 
       {/* --- ÉCRAN 1 : ACCUEIL --- */}
       <AnimatePresence>
         {gameState === "START" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="z-10 text-center p-8 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-2xl max-w-lg"
+            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+            className="z-10 text-center p-10 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl max-w-lg mx-4"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 font-serif">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif text-transparent bg-clip-text bg-gradient-to-br from-white to-red-200 drop-shadow-sm">
               Pour Amal
             </h1>
-            <p className="text-lg md:text-xl text-pink-200 mb-8">
-              J'ai caché mon amour dans ce jeu. <br />
-              Attrape {TARGET_SCORE} cœurs pour le découvrir.
+            <p className="text-lg md:text-xl text-red-100/90 mb-10 font-light leading-relaxed">
+              Mon cœur a caché un message pour toi. <br />
+              Attrape{" "}
+              <span className="font-bold text-white">
+                {TARGET_SCORE} cœurs
+              </span>{" "}
+              pour le révéler.
             </p>
             <button
               onClick={() => setGameState("PLAYING")}
-              className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xl font-bold shadow-lg hover:scale-105 transition-transform active:scale-95"
+              className="px-10 py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-full text-xl font-bold shadow-[0_0_40px_-10px_rgba(220,38,38,0.5)] hover:shadow-[0_0_60px_-10px_rgba(220,38,38,0.7)] hover:scale-105 transition-all duration-300 active:scale-95 border border-white/20"
             >
               Commencer ❤️
             </button>
@@ -135,17 +140,18 @@ export default function LoveGame() {
 
       {/* --- ÉCRAN 2 : LE JEU --- */}
       {gameState === "PLAYING" && (
-        <div className="absolute inset-0 z-20">
+        <div className="absolute inset-0 z-20 cursor-crosshair">
           {/* Barre de progression */}
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-6 bg-white/20 rounded-full overflow-hidden border border-white/30 backdrop-blur">
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-72 md:w-96 h-8 bg-black/30 rounded-full overflow-hidden border border-white/10 backdrop-blur-md shadow-lg">
             <motion.div
-              className="h-full bg-gradient-to-r from-pink-500 to-red-500"
+              className="h-full bg-gradient-to-r from-red-600 via-red-500 to-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.6)]"
               initial={{ width: 0 }}
               animate={{ width: `${(score / TARGET_SCORE) * 100}%` }}
+              transition={{ type: "spring", stiffness: 50 }}
             />
           </div>
-          <p className="absolute top-16 left-1/2 -translate-x-1/2 text-sm font-bold text-pink-200">
-            {score} / {TARGET_SCORE}
+          <p className="absolute top-[4.5rem] left-1/2 -translate-x-1/2 text-sm font-bold text-red-200 tracking-widest uppercase">
+            {score} / {TARGET_SCORE} Amour
           </p>
 
           {/* Les cœurs volants */}
@@ -153,13 +159,13 @@ export default function LoveGame() {
             {hearts.map((heart) => (
               <motion.button
                 key={heart.id}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: heart.scale, opacity: 1 }}
-                exit={{ scale: 1.5, opacity: 0 }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.8 }}
+                initial={{ scale: 0, opacity: 0, y: 20 }}
+                animate={{ scale: heart.scale, opacity: 1, y: 0 }}
+                exit={{ scale: 2, opacity: 0, color: "#ef4444" }}
+                whileHover={{ scale: 1.3, rotate: 10 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => handleHeartClick(heart.id, e)}
-                className="absolute text-5xl cursor-pointer filter drop-shadow-lg"
+                className="absolute text-6xl cursor-pointer filter drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] select-none hover:z-50"
                 style={{ left: `${heart.x}%`, top: `${heart.y}%` }}
               >
                 ❤️
@@ -173,43 +179,47 @@ export default function LoveGame() {
       <AnimatePresence>
         {gameState === "WON" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", duration: 0.8 }}
-            className="z-30 text-center p-10 bg-white/20 backdrop-blur-xl rounded-[3rem] border border-white/40 shadow-2xl max-w-xl mx-4"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", duration: 1, bounce: 0.3 }}
+            className="z-30 text-center p-12 bg-black/20 backdrop-blur-2xl rounded-[3rem] border border-white/20 shadow-2xl max-w-2xl mx-4"
           >
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-7xl mb-4"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]"
             >
-              💖
+              🌹
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-red-300 to-white">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif text-white drop-shadow-lg">
               Amal Rezgui
             </h1>
 
-            <motion.p
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="text-xl md:text-2xl text-white font-medium leading-relaxed mb-8"
+              transition={{ delay: 0.8, duration: 1 }}
+              className="space-y-6"
             >
-              Tu as gagné le jeu, mais c'est moi qui ai gagné le gros lot en
-              t'ayant dans ma vie.
-              <br />
-              <br />
-              <span className="text-pink-300 font-bold">
+              <p className="text-xl md:text-2xl text-red-50 font-medium leading-relaxed">
+                Tu as gagné le jeu... <br />
+                Mais c'est moi qui ai gagné le gros lot <br /> en t'ayant dans
+                ma vie.
+              </p>
+
+              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent mx-auto my-6 opacity-50"></div>
+
+              <p className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-red-200 via-white to-red-200 font-bold animate-pulse">
                 Je t'aime à l'infini.
-              </span>
-            </motion.p>
+              </p>
+            </motion.div>
 
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="text-sm text-white/60"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              className="mt-12 text-xs text-red-300/60 uppercase tracking-[0.3em]"
             >
               Ton Mari qui t'aime
             </motion.div>
@@ -234,7 +244,7 @@ export default function LoveGame() {
           }
         }
         .animate-blob {
-          animation: blob 7s infinite;
+          animation: blob 10s infinite alternate;
         }
         .animation-delay-2000 {
           animation-delay: 2s;
