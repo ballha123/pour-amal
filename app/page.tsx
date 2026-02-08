@@ -1,258 +1,232 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import confetti from "canvas-confetti";
+import React, { useState, useEffect, useRef } from "react";
 
-// Types
-interface Heart {
-  id: number;
-  x: number;
-  y: number;
-  scale: number;
-}
+export default function PourAmal() {
+  const [isSurpriseVisible, setIsSurpriseVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-export default function LoveGame() {
-  const [gameState, setGameState] = useState<"START" | "PLAYING" | "WON">(
-    "START",
-  );
-  const [score, setScore] = useState(0);
-  const [hearts, setHearts] = useState<Heart[]>([]);
+  // --- 1. LOGIQUE D'ANIMATION DES CŒURS ---
+  const createHeart = () => {
+    if (!containerRef.current) return;
 
-  const TARGET_SCORE = 15; // Nombre de cœurs à attraper
+    const heart = document.createElement("div");
+    heart.classList.add("floating-heart");
+    heart.innerHTML = ["❤️", "💖", "💕", "🌹", "🥰"][
+      Math.floor(Math.random() * 5)
+    ];
 
-  // --- LOGIQUE DU JEU ---
+    // Position et style aléatoires
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = Math.random() * 2 + 1 + "rem";
+    heart.style.animationDuration = Math.random() * 3 + 2 + "s";
 
-  // Faire apparaître des cœurs aléatoirement
-  useEffect(() => {
-    if (gameState !== "PLAYING") return;
+    containerRef.current.appendChild(heart);
 
-    const interval = setInterval(() => {
-      setHearts((current) => {
-        if (current.length > 6) return current; // Pas trop de cœurs en même temps
-        return [
-          ...current,
-          {
-            id: Date.now(),
-            x: Math.random() * 80 + 10, // Entre 10% et 90% de la largeur
-            y: Math.random() * 70 + 10, // Entre 10% et 80% de la hauteur
-            scale: Math.random() * 0.5 + 0.8,
-          },
-        ];
-      });
-    }, 550); // Un cœur toutes les 550ms
-
-    return () => clearInterval(interval);
-  }, [gameState]);
-
-  // Quand on clique sur un cœur
-  const handleHeartClick = (id: number, e: React.MouseEvent) => {
-    // Petit effet de confetti local sur le clic
-    confetti({
-      particleCount: 20,
-      spread: 60,
-      origin: {
-        x: e.clientX / window.innerWidth,
-        y: e.clientY / window.innerHeight,
-      },
-      colors: ["#ef4444", "#b91c1c", "#ffffff"], // Rouge vif, Rouge foncé, Blanc
-      disableForReducedMotion: true,
-    });
-
-    setHearts((current) => current.filter((h) => h.id !== id));
-    setScore((s) => {
-      const newScore = s + 1;
-      if (newScore >= TARGET_SCORE) {
-        handleWin();
-      }
-      return newScore;
-    });
+    // Nettoyage après l'animation
+    setTimeout(() => {
+      heart.remove();
+    }, 5000);
   };
 
-  // Victoire
-  const handleWin = () => {
-    setGameState("WON");
-    // Grande explosion finale
-    const duration = 4000;
-    const end = Date.now() + duration;
+  // Lancer la pluie de cœurs au montage du composant
+  useEffect(() => {
+    const interval = setInterval(createHeart, 300);
+    return () => clearInterval(interval); // Nettoyage si on quitte la page
+  }, []);
 
-    (function frame() {
-      confetti({
-        particleCount: 6,
-        angle: 60,
-        spread: 70,
-        origin: { x: 0 },
-        colors: ["#ff0000", "#dc2626", "#fb7185"], // Palette rouge/rose
-      });
-      confetti({
-        particleCount: 6,
-        angle: 120,
-        spread: 70,
-        origin: { x: 1 },
-        colors: ["#ff0000", "#991b1b", "#fff"],
-      });
+  // --- 2. FONCTION ORAGE (Au clic) ---
+  const createHeartStorm = () => {
+    for (let i = 0; i < 30; i++) {
+      setTimeout(createHeart, i * 50);
+    }
+  };
 
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    })();
+  // --- 3. FONCTION SURPRISE ---
+  const handleReveal = () => {
+    createHeartStorm();
+    setIsSurpriseVisible(true);
   };
 
   return (
-    // Fond dynamique Rouge/Bordeaux Profond
-    <main className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-red-950 via-rose-900 to-slate-900 flex flex-col items-center justify-center font-sans text-white">
-      {/* Animation de fond (Lumières flottantes rouges et dorées) */}
-      <div className="absolute inset-0 opacity-40">
-        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-red-600 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
-        <div className="absolute top-40 right-10 w-[400px] h-[400px] bg-rose-500 rounded-full mix-blend-screen filter blur-[80px] animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-20 left-1/3 w-[600px] h-[600px] bg-orange-700/50 rounded-full mix-blend-screen filter blur-[120px] animate-blob animation-delay-4000"></div>
-      </div>
-
-      {/* --- ÉCRAN 1 : ACCUEIL --- */}
-      <AnimatePresence>
-        {gameState === "START" && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-            className="z-10 text-center p-10 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl max-w-lg mx-4"
-          >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif text-transparent bg-clip-text bg-gradient-to-br from-white to-red-200 drop-shadow-sm">
-              Pour Amal
-            </h1>
-            <p className="text-lg md:text-xl text-red-100/90 mb-10 font-light leading-relaxed">
-              Mon cœur a caché un message pour toi. <br />
-              Attrape{" "}
-              <span className="font-bold text-white">
-                {TARGET_SCORE} cœurs
-              </span>{" "}
-              pour le révéler.
-            </p>
-            <button
-              onClick={() => setGameState("PLAYING")}
-              className="px-10 py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-full text-xl font-bold shadow-[0_0_40px_-10px_rgba(220,38,38,0.5)] hover:shadow-[0_0_60px_-10px_rgba(220,38,38,0.7)] hover:scale-105 transition-all duration-300 active:scale-95 border border-white/20"
-            >
-              Commencer ❤️
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* --- ÉCRAN 2 : LE JEU --- */}
-      {gameState === "PLAYING" && (
-        <div className="absolute inset-0 z-20 cursor-crosshair">
-          {/* Barre de progression */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-72 md:w-96 h-8 bg-black/30 rounded-full overflow-hidden border border-white/10 backdrop-blur-md shadow-lg">
-            <motion.div
-              className="h-full bg-gradient-to-r from-red-600 via-red-500 to-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.6)]"
-              initial={{ width: 0 }}
-              animate={{ width: `${(score / TARGET_SCORE) * 100}%` }}
-              transition={{ type: "spring", stiffness: 50 }}
-            />
-          </div>
-          <p className="absolute top-[4.5rem] left-1/2 -translate-x-1/2 text-sm font-bold text-red-200 tracking-widest uppercase">
-            {score} / {TARGET_SCORE} Amour
-          </p>
-
-          {/* Les cœurs volants */}
-          <AnimatePresence>
-            {hearts.map((heart) => (
-              <motion.button
-                key={heart.id}
-                initial={{ scale: 0, opacity: 0, y: 20 }}
-                animate={{ scale: heart.scale, opacity: 1, y: 0 }}
-                exit={{ scale: 2, opacity: 0, color: "#ef4444" }}
-                whileHover={{ scale: 1.3, rotate: 10 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => handleHeartClick(heart.id, e)}
-                className="absolute text-6xl cursor-pointer filter drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] select-none hover:z-50"
-                style={{ left: `${heart.x}%`, top: `${heart.y}%` }}
-              >
-                ❤️
-              </motion.button>
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* --- ÉCRAN 3 : VICTOIRE --- */}
-      <AnimatePresence>
-        {gameState === "WON" && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", duration: 1, bounce: 0.3 }}
-            className="z-30 text-center p-12 bg-black/20 backdrop-blur-2xl rounded-[3rem] border border-white/20 shadow-2xl max-w-2xl mx-4"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]"
-            >
-              🌹
-            </motion.div>
-
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-serif text-white drop-shadow-lg">
-              Amal Rezgui
-            </h1>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="space-y-6"
-            >
-              <p className="text-xl md:text-2xl text-red-50 font-medium leading-relaxed">
-                Tu as gagné le jeu... <br />
-                Mais c'est moi qui ai gagné le gros lot <br /> en t'ayant dans
-                ma vie.
-              </p>
-
-              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent mx-auto my-6 opacity-50"></div>
-
-              <p className="text-3xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-red-200 via-white to-red-200 font-bold animate-pulse">
-                Je t'aime à l'infini.
-              </p>
-            </motion.div>
-
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="mt-12 text-xs text-red-300/60 uppercase tracking-[0.3em]"
-            >
-              Ton Mari qui t'aime
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Styles globaux pour l'animation de fond */}
+    <div className="romantic-page">
+      {/* --- INJECTION DU CSS (Style encapsulé) --- */}
       <style jsx global>{`
-        @keyframes blob {
+        @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;500&display=swap");
+
+        .romantic-page {
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
+          font-family: "Poppins", sans-serif;
+          background: linear-gradient(
+            -45deg,
+            #ff9a9e,
+            #fad0c4,
+            #fad0c4,
+            #ffdde1
+          );
+          background-size: 400% 400%;
+          animation: gradientBG 15s ease infinite;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+        }
+
+        @keyframes gradientBG {
           0% {
-            transform: translate(0px, 0px) scale(1);
+            background-position: 0% 50%;
           }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
+          50% {
+            background-position: 100% 50%;
           }
           100% {
-            transform: translate(0px, 0px) scale(1);
+            background-position: 0% 50%;
           }
         }
-        .animate-blob {
-          animation: blob 10s infinite alternate;
+
+        .card {
+          background: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          padding: 3rem;
+          text-align: center;
+          max-width: 90%;
+          width: 400px;
+          position: relative;
+          z-index: 10;
+          transition: transform 0.3s ease;
         }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+
+        .card:hover {
+          transform: translateY(-5px);
         }
-        .animation-delay-4000 {
-          animation-delay: 4s;
+
+        h1 {
+          font-family: "Dancing Script", cursive;
+          font-size: 3.5rem;
+          color: #d63384;
+          margin-bottom: 0.5rem;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+          color: #555;
+          font-size: 1.1rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+        }
+
+        .heart-container {
+          font-size: 4rem;
+          margin-bottom: 1rem;
+          animation: beat 1s infinite alternate;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        @keyframes beat {
+          to {
+            transform: scale(1.2);
+          }
+        }
+
+        .btn {
+          background-color: #d63384;
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          font-size: 1rem;
+          border-radius: 50px;
+          cursor: pointer;
+          font-family: "Poppins", sans-serif;
+          font-weight: 500;
+          box-shadow: 0 4px 15px rgba(214, 51, 132, 0.4);
+          transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+          background-color: #a61e61;
+          transform: scale(1.05);
+        }
+
+        .floating-heart {
+          position: absolute;
+          bottom: -10vh;
+          font-size: 2rem;
+          animation: floatUp 4s linear forwards;
+          opacity: 0;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        @keyframes floatUp {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-110vh) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
+        .hidden-message {
+          margin-top: 20px;
+          font-weight: bold;
+          color: #a61e61;
+          animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
-    </main>
+
+      {/* CONTENEUR DES CŒURS FLOTTANTS */}
+      <div
+        ref={containerRef}
+        id="hearts-container"
+        className="absolute inset-0 pointer-events-none"
+      ></div>
+
+      {/* LA CARTE CENTRALE */}
+      <div className="card">
+        <div className="heart-container" onClick={createHeartStorm}>
+          ❤️
+        </div>
+
+        <p>À la femme de ma vie,</p>
+        <h1>Amal Rezgui</h1>
+
+        {!isSurpriseVisible ? (
+          <>
+            <p>
+              Chaque jour passé avec toi est un cadeau. Tu illumines mon monde.
+            </p>
+            <button className="btn" onClick={handleReveal}>
+              Clique ici mon amour
+            </button>
+          </>
+        ) : (
+          <div className="hidden-message">
+            Je t'aime plus que tout au monde ! 💖
+            <br />
+            Merci d'être toi.
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
